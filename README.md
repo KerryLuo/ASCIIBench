@@ -1,5 +1,6 @@
-## Hi there 👋
+## Currently under construction, please email kerryluo1@gmail.com for instructions/info/etc
 
+final_dataset has been posted (jsonl file)
 <!--
 **ASCIIBench/ASCIIBench** is a ✨ _special_ ✨ repository because its `README.md` (this file) appears on your GitHub profile.
 
