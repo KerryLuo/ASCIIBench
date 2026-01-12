@@ -1,17 +1,21 @@
-## Currently under construction, please email kerryluo1@gmail.com for instructions/info/etc
-
+# ASCIIBench: Evaluating Language-Model-Based Understanding of Visually-Oriented Text
+Currently under construction, please email kerryluo1@gmail.com for instructions/info/etc
 final_dataset has been posted (jsonl file)
-<!--
-**ASCIIBench/ASCIIBench** is a ✨ _special_ ✨ repository because its `README.md` (this file) appears on your GitHub profile.
 
-Here are some ideas to get you started:
+## Requirements
 
-- 🔭 I’m currently working on ...
-- 🌱 I’m currently learning ...
-- 👯 I’m looking to collaborate on ...
-- 🤔 I’m looking for help with ...
-- 💬 Ask me about ...
-- 📫 How to reach me: ...
-- 😄 Pronouns: ...
-- ⚡ Fun fact: ...
--->
+## Citation
+
+If you use this code, please cite the following [paper](https://arxiv.org/abs/2512.04125):
+
+```bib
+@misc{luo2025asciibenchevaluatinglanguagemodelbasedunderstanding,
+      title={ASCIIBench: Evaluating Language-Model-Based Understanding of Visually-Oriented Text}, 
+      author={Kerry Luo and Michael Fu and Joshua Peguero and Husnain Malik and Anvay Patil and Joyce Lin and Megan Van Overborg and Ryan Sarmiento and Kevin Zhu},
+      year={2025},
+      eprint={2512.04125},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG},
+      url={https://arxiv.org/abs/2512.04125}, 
+}
+```
