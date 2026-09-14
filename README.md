@@ -190,23 +190,23 @@ CLI flags (`--models`, `--modalities`, `--ablation`) override config values.
 
 ```
 ASCIIBench/
-├── final_dataset.jsonl          # Dataset (5,315 ASCII art items)
-├── config.yaml                  # Pipeline configuration
-├── requirements.txt             # Python dependencies
-├── requirements-llama.txt       # Additional deps for LLaMA
-├── requirements-clip.txt        # Additional deps for CLIP
-├── scripts/                     # Pipeline scripts
-│   ├── run_classification.py    # Main pipeline (OpenAI + Anthropic)
+├── final_dataset.jsonl              # Dataset (5,315 ASCII art items)
+├── config.yaml                      # Pipeline configuration
+├── requirements.txt                 # Python dependencies
+├── requirements-llama.txt           # Additional deps for LLaMA
+├── requirements-clip.txt            # Additional deps for CLIP
+├── scripts/                         # Pipeline scripts
+│   ├── run_classification.py        # Main pipeline (OpenAI + Anthropic)
 │   ├── run_llama_classification.py  # LLaMA pipeline (local GPU)
-│   ├── run_generation.py        # ASCII art generation
-│   ├── run_clip_finetuning.py   # CLIP fine-tuning with triplet loss
-│   ├── run_clip_similarity.py   # Cosine similarity testing
-│   └── compute_metrics.py       # Metrics computation
+│   ├── run_generation.py            # ASCII art generation
+│   ├── run_clip_finetuning.py       # CLIP fine-tuning with triplet loss
+│   ├── run_clip_similarity.py       # Cosine similarity testing
+│   └── compute_metrics.py           # Metrics computation
 ├── secrets/
-│   └── .env.example             # API key template
-├── results/                     # Classification results (JSONL)
-├── checkpoints/                 # CLIP model weights (gitignored)
-└── legacy/                      # Original Colab notebooks (reference only)
+│   └── .env.example                 # API key template
+├── results/                         # Classification results (JSONL)
+├── checkpoints/                     # CLIP model weights (gitignored)
+└── legacy/                          # Original Colab notebooks (reference only)
     ├── classification/
     ├── generation/
     └── representation/
