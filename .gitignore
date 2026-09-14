@@ -1,0 +1,37 @@
+# Secrets - NEVER commit API keys
+secrets/.env
+
+# Results (large, per-run output)
+results/*.jsonl
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual environments
+.env
+.venv/
+venv/
+env/
+
+# Fonts (auto-downloaded)
+fonts/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary
+*.tmp
+temp_image.png

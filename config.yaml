@@ -1,0 +1,40 @@
+# ASCIIBench Classification Pipeline Configuration
+# Edit this file to customize which models and modalities to evaluate.
+
+dataset_path: final_dataset.jsonl
+results_dir: results
+seed: 42
+
+# Image preprocessing for vision modalities.
+# Paper default: white background, black text, DejaVu Sans Mono.
+# Set background: black and text_color: white for the ablation study.
+preprocessing:
+  font_size: 18
+  image_size: [1600, 1200]
+  background: white
+  text_color: black
+  margin: 10
+
+# Models to evaluate. Comment out or remove entries you don't need.
+# Supported providers: openai, anthropic
+# Supported modalities: text, vision, text_vision
+models:
+  - name: gpt-4o
+    provider: openai
+    modalities: [text, vision, text_vision]
+
+  - name: gpt-4o-mini
+    provider: openai
+    modalities: [text, vision, text_vision]
+
+  - name: gpt-5-mini
+    provider: openai
+    modalities: [text, vision, text_vision]
+
+  - name: gpt-3.5-turbo
+    provider: openai
+    modalities: [text]
+
+  - name: claude-3-5-sonnet-20240620
+    provider: anthropic
+    modalities: [text, vision, text_vision]
