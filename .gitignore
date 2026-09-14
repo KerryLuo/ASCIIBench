@@ -4,6 +4,9 @@ secrets/.env
 # Results (large, per-run output)
 results/*.jsonl
 
+# Generations (large, per-run output)
+generations/
+
 # Python
 __pycache__/
 *.pyc

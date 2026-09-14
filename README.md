@@ -8,7 +8,7 @@ Paper: [arxiv.org/abs/2512.04125](https://arxiv.org/abs/2512.04125)
 
 ```bash
 # 1. Clone the repo
-git clone https://github.com/KerryLuo/ASCIIBench.git
+git clone https://github.com/ASCIIBench/ASCIIBench.git
 cd ASCIIBench
 
 # 2. Install dependencies
@@ -82,6 +82,24 @@ python run_llama_classification.py
 python run_llama_classification.py --models meta-llama/Meta-Llama-3.1-8B-Instruct
 ```
 
+### Generate ASCII Art
+
+```bash
+# Generate with GPT-4o (5 per class, default)
+python run_generation.py
+
+# Use a different model
+python run_generation.py --model gpt-4o-mini
+
+# Fewer generations per class
+python run_generation.py --num-generations 3
+
+# Resume interrupted run (skips existing files)
+python run_generation.py --resume
+```
+
+Generated art is saved as `.txt` files in `generations/<model>_generations/`.
+
 ### Compute Metrics
 
 ```bash
@@ -134,13 +152,15 @@ ASCIIBench/
 ├── config.yaml                  # Pipeline configuration
 ├── run_classification.py        # Main pipeline (OpenAI + Anthropic)
 ├── run_llama_classification.py  # LLaMA pipeline (local GPU)
+├── run_generation.py            # ASCII art generation pipeline
 ├── compute_metrics.py           # Metrics computation
 ├── requirements.txt             # Python dependencies
 ├── requirements-llama.txt       # Additional deps for LLaMA
 ├── secrets/
 │   └── .env.example             # API key template
 ├── results/                     # Classification results (JSONL)
-└── Classification/              # Original evaluation scripts
+├── classification/              # Original classification scripts
+└── generation/                  # Original generation scripts
 ```
 
 ## Results Format
