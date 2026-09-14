@@ -6,15 +6,18 @@ fine-tuned CLIP model. Produces a CSV of pairwise similarities and optional
 analysis plots (ROC-AUC, distributions, intra-class variance).
 
 Usage:
-    python run_clip_similarity.py --weights checkpoints/clip_weights_epoch_5_lr_1e-06_batch_16.pth
-    python run_clip_similarity.py --weights model.pth --generated-dir generations/gpt-4o_generations
-    python run_clip_similarity.py --weights model.pth --generated-jsonl generated_ascii_GPT4.jsonl
-    python run_clip_similarity.py --weights model.pth --analyze   # also produce plots
+    python scripts/run_clip_similarity.py --weights checkpoints/clip_weights_epoch_5_lr_1e-06_batch_16.pth
+    python scripts/run_clip_similarity.py --weights model.pth --generated-dir generations/gpt-4o_generations
+    python scripts/run_clip_similarity.py --weights model.pth --generated-jsonl generated_ascii_GPT4.jsonl
+    python scripts/run_clip_similarity.py --weights model.pth --analyze   # also produce plots
 """
 
 import argparse
 import json
 import os
+from pathlib import Path
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 import numpy as np
 import pandas as pd
@@ -217,7 +220,7 @@ def main():
     parser = argparse.ArgumentParser(description="ASCIIBench CLIP Similarity Testing")
     parser.add_argument("--weights", required=True,
                         help="Path to fine-tuned CLIP model weights (.pth)")
-    parser.add_argument("--dataset", default="final_dataset.jsonl",
+    parser.add_argument("--dataset", default=str(PROJECT_ROOT / "final_dataset.jsonl"),
                         help="Path to original ASCII art JSONL dataset")
     parser.add_argument("--generated-dir", default=None,
                         help="Directory of generated .txt files")
@@ -238,7 +241,7 @@ def main():
     args = parser.parse_args()
 
     if not args.generated_dir and not args.generated_jsonl:
-        default_dir = f"generations/{args.model_name}_generations"
+        default_dir = str(PROJECT_ROOT / "generations" / f"{args.model_name}_generations")
         if os.path.isdir(default_dir):
             args.generated_dir = default_dir
             print(f"Auto-detected generated dir: {default_dir}")
@@ -310,15 +313,16 @@ def main():
     if args.output:
         csv_path = args.output
     else:
-        os.makedirs("results", exist_ok=True)
-        csv_path = f"results/clip_similarity_{args.model_name}.csv"
+        results_dir = str(PROJECT_ROOT / "results")
+        os.makedirs(results_dir, exist_ok=True)
+        csv_path = os.path.join(results_dir, f"clip_similarity_{args.model_name}.csv")
 
     df.to_csv(csv_path, index=False)
     print(f"\nSaved {len(df)} similarity pairs to {csv_path}")
 
     # Analysis
     if args.analyze:
-        plot_dir = args.plot_dir or "results/similarity_plots"
+        plot_dir = args.plot_dir or str(PROJECT_ROOT / "results" / "similarity_plots")
         run_analysis(df, plot_dir)
 
 

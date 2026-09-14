@@ -5,11 +5,11 @@ Fine-tunes a CLIP model on ASCII art using triplet loss with normalized embeddin
 Logs training metrics to Weights & Biases.
 
 Usage:
-    python run_clip_finetuning.py                                    # default settings
-    python run_clip_finetuning.py --lr 1e-6 --batch-size 16          # custom hyperparams
-    python run_clip_finetuning.py --generate-triplets                # create triplets.json first
-    python run_clip_finetuning.py --resume checkpoints/full_ep3.pth  # resume from checkpoint
-    python run_clip_finetuning.py --no-wandb                         # disable wandb logging
+    python scripts/run_clip_finetuning.py                                    # default settings
+    python scripts/run_clip_finetuning.py --lr 1e-6 --batch-size 16          # custom hyperparams
+    python scripts/run_clip_finetuning.py --generate-triplets                # create triplets.json first
+    python scripts/run_clip_finetuning.py --resume checkpoints/full_ep3.pth  # resume from checkpoint
+    python scripts/run_clip_finetuning.py --no-wandb                         # disable wandb logging
 """
 
 import argparse
@@ -19,6 +19,8 @@ import random
 import sys
 import urllib.request
 from pathlib import Path
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 import numpy as np
 import torch
@@ -91,7 +93,7 @@ _font_cache = {}
 def get_font(font_size=18):
     if font_size in _font_cache:
         return _font_cache[font_size]
-    font_dir = Path(__file__).resolve().parent / "fonts"
+    font_dir = PROJECT_ROOT / "fonts"
     font_path = font_dir / "DejaVuSansMono.ttf"
     if not font_path.exists():
         font_dir.mkdir(exist_ok=True)
@@ -203,12 +205,12 @@ def load_checkpoint(path, model, optimizer=None, scheduler=None):
 
 def main():
     parser = argparse.ArgumentParser(description="ASCIIBench CLIP Fine-tuning")
-    parser.add_argument("--dataset", default="final_dataset.jsonl")
-    parser.add_argument("--triplets", default="triplets.json",
+    parser.add_argument("--dataset", default=str(PROJECT_ROOT / "final_dataset.jsonl"))
+    parser.add_argument("--triplets", default=str(PROJECT_ROOT / "triplets.json"),
                         help="Path to triplets JSON (loaded if exists, otherwise generated)")
     parser.add_argument("--generate-triplets", action="store_true",
                         help="Force regenerate triplets.json from dataset")
-    parser.add_argument("--checkpoint-dir", default="checkpoints")
+    parser.add_argument("--checkpoint-dir", default=str(PROJECT_ROOT / "checkpoints"))
     parser.add_argument("--lr", type=float, default=1e-6, help="Learning rate")
     parser.add_argument("--batch-size", type=int, default=16)
     parser.add_argument("--epochs", type=int, default=5)

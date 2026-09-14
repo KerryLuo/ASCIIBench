@@ -5,11 +5,11 @@ Unified pipeline for evaluating LLMs on ASCII art classification.
 Supports OpenAI and Anthropic models across text, vision, and text+vision modalities.
 
 Usage:
-    python run_classification.py                                # run all models in config.yaml
-    python run_classification.py --models gpt-4o               # run specific model(s)
-    python run_classification.py --modalities text vision      # run specific modalities
-    python run_classification.py --ablation                    # inverted-colors ablation
-    python run_classification.py --resume                      # resume interrupted run
+    python scripts/run_classification.py                                # run all models in config.yaml
+    python scripts/run_classification.py --models gpt-4o               # run specific model(s)
+    python scripts/run_classification.py --modalities text vision      # run specific modalities
+    python scripts/run_classification.py --ablation                    # inverted-colors ablation
+    python scripts/run_classification.py --resume                      # resume interrupted run
 """
 
 import argparse
@@ -22,6 +22,8 @@ import sys
 import time
 import urllib.request
 from pathlib import Path
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 from dotenv import load_dotenv
 from PIL import Image, ImageDraw, ImageFont
@@ -60,7 +62,7 @@ def get_font(font_size=18):
     if font_size in _font_cache:
         return _font_cache[font_size]
 
-    font_dir = Path(__file__).resolve().parent / "fonts"
+    font_dir = PROJECT_ROOT / "fonts"
     font_path = font_dir / "DejaVuSansMono.ttf"
 
     if not font_path.exists():
@@ -327,14 +329,14 @@ def load_config(path):
 # ---------------------------------------------------------------------------
 
 def run(config, args):
-    dataset_path = config.get("dataset_path", "final_dataset.jsonl")
+    dataset_path = config.get("dataset_path", str(PROJECT_ROOT / "final_dataset.jsonl"))
     dataset = load_dataset(dataset_path)
     print(f"Loaded {len(dataset)} items from {dataset_path}")
 
     seed = config.get("seed", 42)
     choices_list = pregenerate_choices(dataset, seed)
 
-    results_dir = Path(config.get("results_dir", "results"))
+    results_dir = Path(config.get("results_dir", str(PROJECT_ROOT / "results")))
     results_dir.mkdir(exist_ok=True)
 
     preproc = {**DEFAULT_PREPROCESSING, **config.get("preprocessing", {})}
@@ -450,7 +452,7 @@ def main():
         description="ASCIIBench Classification Pipeline",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
-    parser.add_argument("--config", default="config.yaml", help="Path to config YAML")
+    parser.add_argument("--config", default=str(PROJECT_ROOT / "config.yaml"), help="Path to config YAML")
     parser.add_argument("--models", nargs="+", help="Model name(s) to run (overrides config)")
     parser.add_argument("--modalities", nargs="+",
                         choices=["text", "vision", "text_vision"],
@@ -463,7 +465,7 @@ def main():
     args = parser.parse_args()
 
     # Load secrets
-    env_path = Path("secrets") / ".env"
+    env_path = PROJECT_ROOT / "secrets" / ".env"
     if env_path.exists():
         load_dotenv(env_path)
     else:

@@ -5,10 +5,10 @@ Computes micro accuracy, macro accuracy, and pass rate from classification resul
 Works on individual result files or all files in the results directory.
 
 Usage:
-    python compute_metrics.py                                    # all results
-    python compute_metrics.py results/gpt-4o_text_results.jsonl  # specific file
-    python compute_metrics.py --dedupe                           # remove duplicate entries
-    python compute_metrics.py --filter-errors                    # exclude parse errors
+    python scripts/compute_metrics.py                                    # all results
+    python scripts/compute_metrics.py results/gpt-4o_text_results.jsonl  # specific file
+    python scripts/compute_metrics.py --dedupe                           # remove duplicate entries
+    python scripts/compute_metrics.py --filter-errors                    # exclude parse errors
 """
 
 import argparse
@@ -17,6 +17,8 @@ import os
 import sys
 from collections import defaultdict
 from pathlib import Path
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 
 def load_results(path):
@@ -109,7 +111,7 @@ def format_table(rows, headers):
 def main():
     parser = argparse.ArgumentParser(description="Compute ASCIIBench classification metrics")
     parser.add_argument("files", nargs="*", help="Result JSONL file(s). Defaults to all in results/")
-    parser.add_argument("--results-dir", default="results", help="Results directory")
+    parser.add_argument("--results-dir", default=str(PROJECT_ROOT / "results"), help="Results directory")
     parser.add_argument("--dedupe", action="store_true", help="Remove duplicate entries per file")
     parser.add_argument("--filter-errors", action="store_true", help="Exclude parse errors from accuracy")
     parser.add_argument("--per-class", action="store_true", help="Show per-class breakdown")

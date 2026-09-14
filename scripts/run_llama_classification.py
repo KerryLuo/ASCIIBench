@@ -5,9 +5,9 @@ Separate script for running LLaMA (local HuggingFace) classification.
 Requires a CUDA GPU and the dependencies in requirements-llama.txt.
 
 Usage:
-    python run_llama_classification.py                                              # both models
-    python run_llama_classification.py --models meta-llama/Meta-Llama-3.1-8B        # one model
-    python run_llama_classification.py --dataset final_dataset.jsonl --seed 42
+    python scripts/run_llama_classification.py                                              # both models
+    python scripts/run_llama_classification.py --models meta-llama/Meta-Llama-3.1-8B        # one model
+    python scripts/run_llama_classification.py --dataset final_dataset.jsonl --seed 42
 """
 
 import argparse
@@ -16,6 +16,8 @@ import os
 import random
 import sys
 from pathlib import Path
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 from tqdm import tqdm
 
@@ -177,8 +179,8 @@ def main():
         "meta-llama/Meta-Llama-3.1-8B",
         "meta-llama/Meta-Llama-3.1-8B-Instruct",
     ], help="HuggingFace model name(s)")
-    parser.add_argument("--dataset", default="final_dataset.jsonl")
-    parser.add_argument("--results-dir", default="results")
+    parser.add_argument("--dataset", default=str(PROJECT_ROOT / "final_dataset.jsonl"))
+    parser.add_argument("--results-dir", default=str(PROJECT_ROOT / "results"))
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--max-new-tokens", type=int, default=50)
     args = parser.parse_args()

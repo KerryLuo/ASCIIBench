@@ -19,7 +19,7 @@ cp secrets/.env.example secrets/.env
 # Edit secrets/.env and add your API keys
 
 # 4. Run classification
-python run_classification.py
+python scripts/run_classification.py
 ```
 
 ## Setup
@@ -53,19 +53,19 @@ Keys are loaded automatically — never commit `secrets/.env` to version control
 
 ```bash
 # Run all models and modalities from config.yaml
-python run_classification.py
+python scripts/run_classification.py
 
 # Run specific model(s)
-python run_classification.py --models gpt-4o claude-3-5-sonnet-20240620
+python scripts/run_classification.py --models gpt-4o claude-3-5-sonnet-20240620
 
 # Run specific modalities
-python run_classification.py --modalities text vision
+python scripts/run_classification.py --modalities text vision
 
 # Run ablation study (inverted colors: black background, white text)
-python run_classification.py --ablation
+python scripts/run_classification.py --ablation
 
 # Custom dataset path
-python run_classification.py --dataset path/to/dataset.jsonl
+python scripts/run_classification.py --dataset path/to/dataset.jsonl
 ```
 
 Runs save incrementally — if interrupted, re-run the same command and it resumes where it left off.
@@ -76,26 +76,26 @@ Runs save incrementally — if interrupted, re-run the same command and it resum
 pip install -r requirements-llama.txt
 
 # Run both LLaMA models
-python run_llama_classification.py
+python scripts/run_llama_classification.py
 
 # Run a specific model
-python run_llama_classification.py --models meta-llama/Meta-Llama-3.1-8B-Instruct
+python scripts/run_llama_classification.py --models meta-llama/Meta-Llama-3.1-8B-Instruct
 ```
 
 ### Generate ASCII Art
 
 ```bash
 # Generate with GPT-4o (5 per class, default)
-python run_generation.py
+python scripts/run_generation.py
 
 # Use a different model
-python run_generation.py --model gpt-4o-mini
+python scripts/run_generation.py --model gpt-4o-mini
 
 # Fewer generations per class
-python run_generation.py --num-generations 3
+python scripts/run_generation.py --num-generations 3
 
 # Resume interrupted run (skips existing files)
-python run_generation.py --resume
+python scripts/run_generation.py --resume
 ```
 
 Generated art is saved as `.txt` files in `generations/<model>_generations/`.
@@ -108,19 +108,19 @@ Fine-tune a CLIP model on the ASCII art dataset using triplet loss:
 pip install -r requirements-clip.txt
 
 # Generate triplets from dataset (first time only)
-python run_clip_finetuning.py --generate-triplets
+python scripts/run_clip_finetuning.py --generate-triplets
 
 # Train with default settings (lr=1e-6, batch_size=16, 5 epochs)
-python run_clip_finetuning.py
+python scripts/run_clip_finetuning.py
 
 # Custom hyperparameters
-python run_clip_finetuning.py --lr 1e-5 --batch-size 32 --epochs 10
+python scripts/run_clip_finetuning.py --lr 1e-5 --batch-size 32 --epochs 10
 
 # Resume from checkpoint
-python run_clip_finetuning.py --resume checkpoints/full_ep3.pth
+python scripts/run_clip_finetuning.py --resume checkpoints/full_ep3.pth
 
 # Disable wandb logging
-python run_clip_finetuning.py --no-wandb
+python scripts/run_clip_finetuning.py --no-wandb
 ```
 
 Model weights are saved to `checkpoints/` after each epoch.
@@ -131,13 +131,13 @@ Compare original vs generated ASCII art using a fine-tuned CLIP model:
 
 ```bash
 # Basic similarity test
-python run_clip_similarity.py --weights checkpoints/clip_weights_epoch_5_lr_1e-06_batch_16.pth
+python scripts/run_clip_similarity.py --weights checkpoints/clip_weights_epoch_5_lr_1e-06_batch_16.pth
 
 # Specify generated art directory
-python run_clip_similarity.py --weights model.pth --generated-dir generations/gpt-4o_generations
+python scripts/run_clip_similarity.py --weights model.pth --generated-dir generations/gpt-4o_generations
 
 # With analysis plots (ROC-AUC, distributions, intra-class variance)
-python run_clip_similarity.py --weights model.pth --analyze
+python scripts/run_clip_similarity.py --weights model.pth --analyze
 ```
 
 Results are saved as CSV to `results/clip_similarity_<model>.csv`.
@@ -146,19 +146,19 @@ Results are saved as CSV to `results/clip_similarity_<model>.csv`.
 
 ```bash
 # Compute metrics for all results
-python compute_metrics.py
+python scripts/compute_metrics.py
 
 # Specific result file(s)
-python compute_metrics.py results/gpt-4o_text_results.jsonl
+python scripts/compute_metrics.py results/gpt-4o_text_results.jsonl
 
 # Remove duplicates and exclude parse errors
-python compute_metrics.py --dedupe --filter-errors
+python scripts/compute_metrics.py --dedupe --filter-errors
 
 # Per-class breakdown
-python compute_metrics.py --per-class
+python scripts/compute_metrics.py --per-class
 
 # CSV output
-python compute_metrics.py --csv
+python scripts/compute_metrics.py --csv
 ```
 
 Metrics reported: **micro accuracy**, **macro accuracy** (mean of per-class accuracies), and **pass rate** (fraction of responses that parsed successfully).
@@ -192,22 +192,24 @@ CLI flags (`--models`, `--modalities`, `--ablation`) override config values.
 ASCIIBench/
 ├── final_dataset.jsonl          # Dataset (5,315 ASCII art items)
 ├── config.yaml                  # Pipeline configuration
-├── run_classification.py        # Main pipeline (OpenAI + Anthropic)
-├── run_llama_classification.py  # LLaMA pipeline (local GPU)
-├── run_generation.py            # ASCII art generation pipeline
-├── compute_metrics.py           # Metrics computation
-├── run_clip_finetuning.py       # CLIP fine-tuning with triplet loss
-├── run_clip_similarity.py       # Cosine similarity testing
 ├── requirements.txt             # Python dependencies
 ├── requirements-llama.txt       # Additional deps for LLaMA
 ├── requirements-clip.txt        # Additional deps for CLIP
+├── scripts/                     # Pipeline scripts
+│   ├── run_classification.py    # Main pipeline (OpenAI + Anthropic)
+│   ├── run_llama_classification.py  # LLaMA pipeline (local GPU)
+│   ├── run_generation.py        # ASCII art generation
+│   ├── run_clip_finetuning.py   # CLIP fine-tuning with triplet loss
+│   ├── run_clip_similarity.py   # Cosine similarity testing
+│   └── compute_metrics.py       # Metrics computation
 ├── secrets/
 │   └── .env.example             # API key template
 ├── results/                     # Classification results (JSONL)
 ├── checkpoints/                 # CLIP model weights (gitignored)
-├── classification/              # Original classification scripts
-├── generation/                  # Original generation scripts
-└── representation/              # Original CLIP scripts
+└── legacy/                      # Original Colab notebooks (reference only)
+    ├── classification/
+    ├── generation/
+    └── representation/
 ```
 
 ## Results Format

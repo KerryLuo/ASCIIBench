@@ -5,10 +5,10 @@ Generates ASCII art using OpenAI models for each class in the dataset.
 Each class gets multiple generation attempts, saved as individual text files.
 
 Usage:
-    python run_generation.py                                          # default (gpt-4o, 5 per class)
-    python run_generation.py --model gpt-4o-mini                      # specific model
-    python run_generation.py --num-generations 3                      # 3 per class
-    python run_generation.py --resume                                 # skip existing files
+    python scripts/run_generation.py                                          # default (gpt-4o, 5 per class)
+    python scripts/run_generation.py --model gpt-4o-mini                      # specific model
+    python scripts/run_generation.py --num-generations 3                      # 3 per class
+    python scripts/run_generation.py --resume                                 # skip existing files
 """
 
 import argparse
@@ -17,6 +17,8 @@ import os
 import sys
 import time
 from pathlib import Path
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 from dotenv import load_dotenv
 from tqdm import tqdm
@@ -70,15 +72,15 @@ def safe_request(func, *args, max_retries=5, **kwargs):
 def main():
     parser = argparse.ArgumentParser(description="ASCIIBench ASCII Art Generation")
     parser.add_argument("--model", default="gpt-4o", help="OpenAI model to use")
-    parser.add_argument("--dataset", default="final_dataset.jsonl")
-    parser.add_argument("--output-dir", default="generations", help="Output directory for generated art")
+    parser.add_argument("--dataset", default=str(PROJECT_ROOT / "final_dataset.jsonl"))
+    parser.add_argument("--output-dir", default=str(PROJECT_ROOT / "generations"), help="Output directory for generated art")
     parser.add_argument("--num-generations", type=int, default=5,
                         help="Number of generations per item")
     parser.add_argument("--resume", action="store_true",
                         help="Skip items that already have all generation files")
     args = parser.parse_args()
 
-    env_path = Path("secrets") / ".env"
+    env_path = PROJECT_ROOT / "secrets" / ".env"
     if env_path.exists():
         load_dotenv(env_path)
     else:
