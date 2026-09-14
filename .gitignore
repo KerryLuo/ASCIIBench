@@ -25,6 +25,10 @@ env/
 # Fonts (auto-downloaded)
 fonts/
 
+# CLIP checkpoints (large model weights)
+checkpoints/
+*.pth
+
 # IDE
 .vscode/
 .idea/

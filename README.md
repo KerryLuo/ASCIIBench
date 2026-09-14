@@ -100,6 +100,48 @@ python run_generation.py --resume
 
 Generated art is saved as `.txt` files in `generations/<model>_generations/`.
 
+### CLIP Fine-tuning
+
+Fine-tune a CLIP model on the ASCII art dataset using triplet loss:
+
+```bash
+pip install -r requirements-clip.txt
+
+# Generate triplets from dataset (first time only)
+python run_clip_finetuning.py --generate-triplets
+
+# Train with default settings (lr=1e-6, batch_size=16, 5 epochs)
+python run_clip_finetuning.py
+
+# Custom hyperparameters
+python run_clip_finetuning.py --lr 1e-5 --batch-size 32 --epochs 10
+
+# Resume from checkpoint
+python run_clip_finetuning.py --resume checkpoints/full_ep3.pth
+
+# Disable wandb logging
+python run_clip_finetuning.py --no-wandb
+```
+
+Model weights are saved to `checkpoints/` after each epoch.
+
+### CLIP Similarity Testing
+
+Compare original vs generated ASCII art using a fine-tuned CLIP model:
+
+```bash
+# Basic similarity test
+python run_clip_similarity.py --weights checkpoints/clip_weights_epoch_5_lr_1e-06_batch_16.pth
+
+# Specify generated art directory
+python run_clip_similarity.py --weights model.pth --generated-dir generations/gpt-4o_generations
+
+# With analysis plots (ROC-AUC, distributions, intra-class variance)
+python run_clip_similarity.py --weights model.pth --analyze
+```
+
+Results are saved as CSV to `results/clip_similarity_<model>.csv`.
+
 ### Compute Metrics
 
 ```bash
@@ -154,13 +196,18 @@ ASCIIBench/
 ├── run_llama_classification.py  # LLaMA pipeline (local GPU)
 ├── run_generation.py            # ASCII art generation pipeline
 ├── compute_metrics.py           # Metrics computation
+├── run_clip_finetuning.py       # CLIP fine-tuning with triplet loss
+├── run_clip_similarity.py       # Cosine similarity testing
 ├── requirements.txt             # Python dependencies
 ├── requirements-llama.txt       # Additional deps for LLaMA
+├── requirements-clip.txt        # Additional deps for CLIP
 ├── secrets/
 │   └── .env.example             # API key template
 ├── results/                     # Classification results (JSONL)
+├── checkpoints/                 # CLIP model weights (gitignored)
 ├── classification/              # Original classification scripts
-└── generation/                  # Original generation scripts
+├── generation/                  # Original generation scripts
+└── representation/              # Original CLIP scripts
 ```
 
 ## Results Format
