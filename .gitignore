@@ -1,5 +1,6 @@
 # Secrets - NEVER commit API keys
 secrets/.env
+*.pem
 
 # Results (large, per-run output)
 results/*.jsonl

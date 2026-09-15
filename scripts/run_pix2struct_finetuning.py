@@ -10,6 +10,7 @@ Usage:
     python scripts/run_pix2struct_finetuning.py --lr 1e-5 --batch-size 4           # custom hyperparams
     python scripts/run_pix2struct_finetuning.py --resume checkpoints/full_ep3.pth  # resume from checkpoint
     python scripts/run_pix2struct_finetuning.py --no-wandb                         # disable wandb logging
+    python scripts/run_pix2struct_finetuning.py --s3-bucket my-bucket             # also back up checkpoints to S3
 """
 
 import argparse
@@ -184,6 +185,40 @@ def load_checkpoint(path, model, optimizer=None, scheduler=None):
 
 
 # ---------------------------------------------------------------------------
+# Off-box checkpoint backup — S3 and wandb artifacts
+# ---------------------------------------------------------------------------
+
+def upload_to_s3(local_path, bucket, prefix=""):
+    import boto3
+
+    key = f"{prefix.rstrip('/')}/{Path(local_path).name}" if prefix else Path(local_path).name
+    boto3.client("s3").upload_file(str(local_path), bucket, key)
+    print(f"  Uploaded to s3://{bucket}/{key}")
+
+
+def log_wandb_artifact(path, name, artifact_type="model"):
+    import wandb
+
+    artifact = wandb.Artifact(name, type=artifact_type)
+    artifact.add_file(str(path))
+    wandb.log_artifact(artifact)
+    print(f"  Logged wandb artifact: {name}")
+
+
+def backup_checkpoint(path, name, args, use_wandb):
+    if args.s3_bucket:
+        try:
+            upload_to_s3(path, args.s3_bucket, args.s3_prefix)
+        except Exception as e:
+            print(f"  Warning: S3 upload failed for {path}: {e}")
+    if use_wandb:
+        try:
+            log_wandb_artifact(path, name)
+        except Exception as e:
+            print(f"  Warning: wandb artifact log failed for {path}: {e}")
+
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 
@@ -206,6 +241,10 @@ def main():
     parser.add_argument("--wandb-project", default="Finetuning_Pix2Struct",
                         help="Weights & Biases project name")
     parser.add_argument("--no-wandb", action="store_true", help="Disable wandb logging")
+    parser.add_argument("--s3-bucket", default=None,
+                        help="S3 bucket to back up checkpoints to (requires boto3 + AWS credentials)")
+    parser.add_argument("--s3-prefix", default="pix2struct_checkpoints",
+                        help="Key prefix within the S3 bucket")
     parser.add_argument("--seed", type=int, default=42)
     args = parser.parse_args()
 
@@ -323,6 +362,7 @@ def main():
                 if args.save_every and (batch_idx + 1) % args.save_every == 0:
                     mid_path = str(ckpt_dir / f"ckpt_ep{epoch}_step{batch_idx + 1}.pth")
                     save_checkpoint(model, optimizer, scheduler, epoch, batch_idx + 1, mid_path)
+                    backup_checkpoint(mid_path, f"ckpt-ep{epoch}-step{batch_idx + 1}", args, use_wandb)
 
             # Validation
             model.eval()
@@ -373,14 +413,17 @@ def main():
             weights_path = ckpt_dir / f"pix2struct_weights_epoch_{epoch + 1}_lr_{args.lr}_batch_{args.batch_size}.pth"
             torch.save(model.state_dict(), weights_path)
             print(f"  Weights saved: {weights_path}")
+            backup_checkpoint(weights_path, f"pix2struct-weights-epoch{epoch + 1}", args, use_wandb)
 
             # Save full checkpoint
             full_path = str(ckpt_dir / f"pix2struct_full_ep{epoch + 1}.pth")
             save_checkpoint(model, optimizer, scheduler, epoch + 1, 0, full_path)
+            backup_checkpoint(full_path, f"pix2struct-full-epoch{epoch + 1}", args, use_wandb)
 
     except KeyboardInterrupt:
         emergency = str(ckpt_dir / f"pix2struct_emergency_ep{epoch}_step{batch_idx}.pth")
         save_checkpoint(model, optimizer, scheduler, epoch, batch_idx, emergency)
+        backup_checkpoint(emergency, f"pix2struct-emergency-ep{epoch}-step{batch_idx}", args, use_wandb)
         print(f"\nInterrupted. Emergency checkpoint saved: {emergency}")
 
     if use_wandb:
