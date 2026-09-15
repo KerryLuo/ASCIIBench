@@ -18,6 +18,7 @@ import os
 import random
 import sys
 import urllib.request
+import zipfile
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -97,9 +98,16 @@ def get_font(font_size=18):
     font_path = font_dir / "DejaVuSansMono.ttf"
     if not font_path.exists():
         font_dir.mkdir(exist_ok=True)
-        url = "https://github.com/dejavu-fonts/dejavu-fonts/raw/version_2_37/ttf/DejaVuSansMono.ttf"
+        zip_url = ("https://github.com/dejavu-fonts/dejavu-fonts/releases/download/"
+                   "version_2_37/dejavu-fonts-ttf-2.37.zip")
+        zip_path = font_dir / "dejavu-fonts-ttf-2.37.zip"
         print(f"Downloading DejaVu Sans Mono font to {font_path} ...")
-        urllib.request.urlretrieve(url, str(font_path))
+        urllib.request.urlretrieve(zip_url, str(zip_path))
+        with zipfile.ZipFile(zip_path) as zf:
+            member = "dejavu-fonts-ttf-2.37/ttf/DejaVuSansMono.ttf"
+            with zf.open(member) as src, open(font_path, "wb") as dst:
+                dst.write(src.read())
+        zip_path.unlink()
     font = ImageFont.truetype(str(font_path), font_size)
     _font_cache[font_size] = font
     return font
