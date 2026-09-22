@@ -1,14 +1,13 @@
 # ASCIIBench: Evaluating Language-Model-Based Understanding of Visually-Oriented Text
 
-A benchmark for evaluating how well large language models classify ASCII art. The dataset contains **5,315 items across 752 classes**. Models are evaluated using a 4-choice classification task across three modalities: text-only, vision-only, and text+vision.
-
-Paper: [arxiv.org/abs/2512.04125](https://arxiv.org/abs/2512.04125)
-
 <p align="center">
   <a href="https://arxiv.org/abs/2512.04125">📄 arXiv</a>
-  &nbsp;·&nbsp;
+  &nbsp;|&nbsp;
   <a href="https://huggingface.co/datasets/KerryL/ascii-bench">🤗 Dataset</a>
 </p>
+
+
+A benchmark for evaluating how well large language models classify ASCII art. The dataset contains **5,135 items across 752 classes**. Models are evaluated using a 4-choice classification task across three modalities: text-only, vision-only, and text+vision.
 
 ## Quick Start
 
