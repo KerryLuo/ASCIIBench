@@ -4,6 +4,12 @@ A benchmark for evaluating how well large language models classify ASCII art. Th
 
 Paper: [arxiv.org/abs/2512.04125](https://arxiv.org/abs/2512.04125)
 
+<p align="center">
+  <a href="https://arxiv.org/abs/2512.04125">📄 arXiv</a>
+  &nbsp;·&nbsp;
+  <a href="https://huggingface.co/datasets/KerryL/ascii-bench">🤗 Dataset</a>
+</p>
+
 ## Quick Start
 
 ```bash
