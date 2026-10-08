@@ -358,6 +358,8 @@ def main():
     processor = AutoProcessor.from_pretrained(args.model_name)
     model = Pix2StructForConditionalGeneration.from_pretrained(args.model_name).to(device)
 
+    # Fetch the font once here; otherwise every DataLoader worker races to download it to the same path.
+    get_font(args.font_size)
     ds_kwargs = dict(max_patches=args.max_patches, max_length=args.max_length, font_size=args.font_size)
     train_ds = AsciiTuneDataset(train_items, processor, **ds_kwargs)
     val_ds = AsciiTuneDataset(val_items, processor, **ds_kwargs)
