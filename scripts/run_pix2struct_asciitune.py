@@ -42,6 +42,13 @@ from urllib.parse import unquote
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT / "scripts"))
 os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
+# RunPod images set HF_HUB_ENABLE_HF_TRANSFER=1 without installing hf_transfer, which makes every
+# Hub download fail. Fall back to the normal downloader in that case (must run before HF imports).
+if os.environ.get("HF_HUB_ENABLE_HF_TRANSFER") == "1":
+    import importlib.util
+
+    if importlib.util.find_spec("hf_transfer") is None:
+        os.environ["HF_HUB_ENABLE_HF_TRANSFER"] = "0"
 
 import torch
 import torch.nn.functional as F
