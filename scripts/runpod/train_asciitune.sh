@@ -32,6 +32,8 @@ if [ -d /workspace ]; then
     export HF_HOME="${HF_HOME:-/workspace/hf_cache}"
 fi
 export TOKENIZERS_PARALLELISM=false
+# Newer RunPod/NGC images mark the system Python as externally managed (PEP 668); the pod is disposable.
+export PIP_BREAK_SYSTEM_PACKAGES=1
 export PYTHONUNBUFFERED=1
 
 setup() {
