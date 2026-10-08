@@ -43,3 +43,6 @@ Thumbs.db
 # Temporary
 *.tmp
 temp_image.png
+
+# Training runs (checkpoints, logs, analysis)
+runs/

@@ -125,6 +125,23 @@ python scripts/run_clip_finetuning.py --no-wandb
 
 Model weights are saved to `checkpoints/` after each epoch.
 
+### Pix2Struct Fine-tuning on ASCIITune (RunPod)
+
+Fine-tune Pix2Struct on the [ASCIITune](https://huggingface.co/datasets/ASCIIEval/ASCIITune) training set (downloaded automatically) and evaluate the best checkpoint on the [ASCIIEval](https://huggingface.co/datasets/ASCIIEval/ASCIIEval) test set. Accuracy is reported as 4-way multiple choice (the model scores each choice; chance = 25%) and as free-generation exact match.
+
+```bash
+# On the pod, from the repo root (e.g. /workspace/ASCIIBench)
+bash scripts/runpod/train_asciitune.sh smoke             # quick end-to-end check
+bash scripts/runpod/train_asciitune.sh train             # full run in the background (lr 1e-4, 10 epochs)
+bash scripts/runpod/train_asciitune.sh sweep             # lr 3e-5 / 1e-4 / 3e-4 + comparison table
+tail -f runs/<run_name>/train.log
+
+# Convergence analysis (runs automatically after training; re-run any time)
+python scripts/analyze_pix2struct_convergence.py runs/<run_name> [more runs ...]
+```
+
+Each run directory holds `metrics.jsonl`, per-eval predictions in `preds/`, the best model in `best/` (Hugging Face format), a resumable `last.pt`, `test_results.json`, and `analysis/report.md` + `analysis/convergence.png`.
+
 ### CLIP Similarity Testing
 
 Compare original vs generated ASCII art using a fine-tuned CLIP model:
