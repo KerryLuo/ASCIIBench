@@ -173,6 +173,10 @@ def analyze_val(run, train_stats):
         "gen_best": float(np.nanmax(gen)) if np.isfinite(gen).any() else float("nan"),
         "gen_final": float(gen[-1]),
         "train_val_gap": gap,
+        # Image-free reference points at the best eval (absent in runs from before they were logged).
+        "best_prior": v[i_best_mc].get("prior_mc_acc"),
+        "best_blank": v[i_best_mc].get("blank_mc_acc"),
+        "best_calib": v[i_best_mc].get("mc_acc_calib"),
     }
 
 
@@ -204,7 +208,21 @@ def analyze_preds(run):
     }
 
 
-def verdict(tr, va, pr):
+def shortcut_check(split, acc, prior, blank, n):
+    """Is accuracy clearly above what's reachable without looking at the image?"""
+    refs = {k: v for k, v in (("label-frequency baseline", prior), ("blank-image", blank)) if v is not None}
+    if not refs:
+        return None
+    name, ref = max(refs.items(), key=lambda kv: kv[1])
+    se = acc_stderr(acc, n)
+    detail = ", ".join(f"{k} {v:.1%}" for k, v in refs.items())
+    if acc - ref < 2 * se:
+        return ("BAD", f"{split} MC accuracy {acc:.1%} is not clearly above the image-free references ({detail}; ±{se:.1%} SE) "
+                       "— the model is answering from label priors, not from the art.")
+    return ("OK", f"{split} MC accuracy {acc:.1%} beats the image-free references ({detail}) by {(acc - ref) / se:.1f} SE.")
+
+
+def verdict(tr, va, pr, test=None):
     """Return (overall verdict, list of (level, message)). Levels: OK / WARN / BAD."""
     findings = []
     flags = set()
@@ -260,6 +278,21 @@ def verdict(tr, va, pr):
             findings.append(("OK", f"Val MC accuracy has plateaued (last-third change {va['mc_recent_gain']:+.1%}, within 2 SE)."))
         if va["train_val_gap"] is not None and va["train_val_gap"] > 1.0:
             findings.append(("WARN", f"Large train/val loss gap at the end ({va['train_val_gap']:.2f} nats) — memorizing train labels."))
+        sc = shortcut_check("Val", va["mc_best"], va["best_prior"], va["best_blank"], va["n_val"])
+        if sc:
+            findings.append(sc)
+            if sc[0] == "BAD":
+                flags.add("shortcut")
+        if va["best_prior"] is None and va["best_blank"] is None:
+            findings.append(("WARN", "No image-free baselines were logged (run predates them); "
+                                     "accuracy can't be separated from label-prior guessing."))
+
+    if test:
+        sc = shortcut_check("Test", test["mc_acc"], test.get("prior_mc_acc"), test.get("blank_mc_acc"), test["n"])
+        if sc:
+            findings.append(sc)
+            if sc[0] == "BAD":
+                flags.add("shortcut")
 
     if pr.get("ok"):
         if pr["mc_top_pos_share"] > 0.5:
@@ -284,6 +317,8 @@ def verdict(tr, va, pr):
         overall = "COLLAPSED (degenerate predictions)"
     elif "chance" in flags:
         overall = "NOT LEARNING (at chance)"
+    elif "shortcut" in flags:
+        overall = "SHORTCUT (no better than image-free baselines)"
     elif "overfit" in flags:
         overall = "CONVERGED, THEN OVERFIT (use best/ checkpoint)"
     elif "still_improving_val" in flags or "still_improving_train" in flags:
@@ -346,10 +381,18 @@ def plot_run(run, va, pr, out_path):
         se = np.array([acc_stderr(p, r["n"]) for p, r in zip(mc, v)])
         ax.fill_between(ve, mc - 2 * se, mc + 2 * se, color=SERIES[0], alpha=0.12, linewidth=0)
         ax.plot(ve, mc, color=SERIES[0], linewidth=2, marker="o", markersize=5, label="multiple-choice (±2 SE)")
+        if "blank_mc_acc" in v[0]:
+            ax.plot(ve, [r["blank_mc_acc"] for r in v], color=SERIES[1], linewidth=2,
+                    marker="o", markersize=5, label="same model, blank image")
         ax.plot(ve, [r.get("gen_acc", np.nan) for r in v], color=SERIES[2], linewidth=2,
                 marker="o", markersize=5, label="free generation")
         ax.axhline(CHANCE, color=INK, linestyle="--", linewidth=1)
         ax.text(ve[0], CHANCE, " chance (MC)", color=INK, fontsize=8, va="bottom")
+        if v[-1].get("prior_mc_acc") is not None:
+            prior = v[-1]["prior_mc_acc"]
+            ax.axhline(prior, color=INK, linestyle=":", linewidth=1.2)
+            ax.text(ve[-1], prior, f"label-frequency baseline {prior:.0%} ", color=INK, fontsize=8,
+                    va="bottom", ha="right")
         if va.get("ok"):
             ax.annotate(f"best {va['mc_best']:.1%}", (va["mc_best_epoch"], va["mc_best"]),
                         textcoords="offset points", xytext=(0, 8), ha="center", fontsize=8, color="#0b0b0b")
@@ -444,8 +487,10 @@ def build_report(run, tr, va, pr, overall, findings, plotted):
               f"| MC accuracy | {fmt(va['mc_first'], True)} | {fmt(va['mc_best'], True)} (ep {va['mc_best_epoch']:.2f}) | {fmt(va['mc_final'], True)} |",
               f"| generation accuracy | | {fmt(va['gen_best'], True)} | {fmt(va['gen_final'], True)} |",
               "", f"MC standard error at n={va['n_val']}: ±{va['mc_stderr']:.1%}. Chance = 25%.", ""]
-        L += ["| epoch | val loss | MC acc | gen acc |", "|---|---|---|---|"]
-        L += [f"| {r['epoch']:.2f} | {r['loss']:.4f} | {r['mc_acc']:.1%} | {fmt(r.get('gen_acc'), True)} |"
+        L += ["| epoch | val loss | MC acc | MC calibrated | blank image | label-freq baseline | gen acc |",
+              "|---|---|---|---|---|---|---|"]
+        L += [f"| {r['epoch']:.2f} | {r['loss']:.4f} | {r['mc_acc']:.1%} | {fmt(r.get('mc_acc_calib'), True)} | "
+              f"{fmt(r.get('blank_mc_acc'), True)} | {fmt(r.get('prior_mc_acc'), True)} | {fmt(r.get('gen_acc'), True)} |"
               for r in run["val"]]
         L.append("")
 
@@ -454,6 +499,12 @@ def build_report(run, tr, va, pr, overall, findings, plotted):
         L += ["## ASCIIEval test set (best checkpoint)", "",
               f"MC accuracy **{t['mc_acc']:.1%}** (n={t['n']}, ±{acc_stderr(t['mc_acc'], t['n']):.1%} SE), "
               f"generation accuracy {fmt(t.get('gen_acc'), True)}.", ""]
+        if "prior_mc_acc" in t:
+            L += ["| MC acc | MC calibrated | blank image | label-freq baseline | answer seen in train | answer unseen |",
+                  "|---|---|---|---|---|---|",
+                  f"| {t['mc_acc']:.1%} | {fmt(t.get('mc_acc_calib'), True)} | {fmt(t.get('blank_mc_acc'), True)} | "
+                  f"{fmt(t.get('prior_mc_acc'), True)} | {fmt(t.get('mc_acc_seen'), True)} | "
+                  f"{fmt(t.get('mc_acc_unseen'), True)} (n={t.get('n_unseen')}) |", ""]
 
     if pr.get("ok"):
         L += [f"## Predictions ({pr['file']})", "",
@@ -479,7 +530,7 @@ def main():
         tr = analyze_train(run)
         va = analyze_val(run, tr)
         pr = analyze_preds(run)
-        overall, findings = verdict(tr, va, pr)
+        overall, findings = verdict(tr, va, pr, run["test"])
 
         out_dir = run["dir"] / "analysis"
         out_dir.mkdir(exist_ok=True)
